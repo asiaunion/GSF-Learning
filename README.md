@@ -1,1 +1,29 @@
-IyBHU0YtTGVhcm5pbmcKCkdTRiBMZWFybmluZyBpcyBhIHBlcnNvbmFsIGN1cnJpY3VsdW0gdHJhY2tlciB3ZWIgYXBwIHRoYXQgb3JnYW5pemVzIGFuZCB2aXN1YWxpemVzIHNlbGYtZGlyZWN0ZWQgbGVhcm5pbmcgZ29hbHMgYW5kIHByb2dyZXNzLgoKLS0tCgojIyBDdXJyZW50IEZvY3VzCgotIEdTRiBNaXNzaW9uIENvbnRyb2wgc3lzdGVtIHNldHVwOiBOb3Rpb24gREIgaW50ZWdyYXRpb24sIGF1dG9tYXRpb24gcGlwZWxpbmUgKERheSAxfkRheSAzKQotIEFJLWRyaXZlbiBhZ2VudGljIHdvcmtmbG93IGRlc2lnbiAoQUcgQnVpbGRlciArIEN1cnNvciBHYXRlIHBhdHRlcm4pCgojIyBOZXh0CgotIEN1cnJpY3VsdW0gZGF0YSBzdHJ1Y3R1cmUgcmVmYWN0b3Jpbmc6IGN1cnJpY3VsdW0uanMgbW9kdWxhcml6YXRpb24KLSBMZWFybmluZyBsb2cgZmVhdHVyZTogZGFpbHkgc3R1ZHkgc2Vzc2lvbiB0cmFja2luZyBVSQoKLS0tCgojIyBTdGFjawoKLSBWYW5pbGxhIEpTIChhcHAuanMsIGN1cnJpY3VsdW0uanMpCi0gSFRNTCAvIENTUwotIFZlcmNlbCAoc3RhdGljIGhvc3RpbmcpCgojIyBBdXRvbWF0aW9uCgotIFByb2ZpbGU6IGBzdGFuZGFyZGAKLSBOaWdodGx5RWxpZ2libGU6IGB3aGVuX3F1ZXVlZGAKLSBHYXRlOiBDdXJzb3IgVmVyaWZpZXIgKFRlbXBsYXRlIEMpCg==
+# GSF-Learning
+
+GSF Learning is a personal curriculum tracker web app that organizes and visualizes self-directed learning goals and progress.
+
+---
+
+## Current Focus
+
+- GSF Mission Control system setup: Notion DB integration, automation pipeline (Day 1~Day 3)
+- AI-driven agentic workflow design (AG Builder + Cursor Gate pattern)
+
+## Next
+
+- Curriculum data structure refactoring: curriculum.js modularization
+- Learning log feature: daily study session tracking UI
+
+---
+
+## Stack
+
+- Vanilla JS (app.js, curriculum.js)
+- HTML / CSS
+- Vercel (static hosting)
+
+## Automation
+
+- Profile: `standard`
+- NightlyEligible: `when_queued`
+- Gate: Cursor Verifier (Template C)
