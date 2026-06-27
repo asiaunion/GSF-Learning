@@ -59,7 +59,7 @@ export default {
       ]
     },
     {
-      "id": 306, "title": "Lesson 6", "row": "신약 인물",
+      "id": 306, "title": "Lesson 6", "row": "성경 인물",
       "cards": [
         { "character": "ペテロ",  "word": "ぺてろ",   "wordReading": "ぺてろ",   "meaningKo": "베드로",   "emoji": "⛵" },
         { "character": "パウロ",  "word": "ぱうろ",   "wordReading": "ぱうろ",   "meaningKo": "바울",     "emoji": "✉️" },
@@ -77,7 +77,7 @@ export default {
         { "character": "洗礼",    "word": "せんれい",   "wordReading": "せんれい",   "meaningKo": "세례",     "emoji": "💧" },
         { "character": "聖霊",    "word": "せいれい",   "wordReading": "せいれい",   "meaningKo": "성령",     "emoji": "🕊️" },
         { "character": "奉仕",    "word": "ほうし",     "wordReading": "ほうし",     "meaningKo": "봉사",     "emoji": "🤲" },
-        { "character": "仲間",    "word": "なかま",     "wordReading": "なかま",     "meaningKo": "동료",     "emoji": "🤗" }
+        { "character": "隣人",    "word": "りんじん",   "wordReading": "りんじん",   "meaningKo": "이웃",     "emoji": "🏘️" }
       ]
     },
     {
