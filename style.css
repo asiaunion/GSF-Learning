@@ -1147,3 +1147,69 @@ body {
 }
 .log-empty { color: #aaa; font-size: 14px; text-align: center; padding: 20px 0; }
 
+/* ─── 다크 모드 ────────────────────────────────── */
+:root.dark {
+  --bg: #1a1a2e;
+  --text: #e0e0e0;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --peach: #2a2a4a;
+  --mint: #1a9e96;
+}
+
+:root.dark body {
+  background-color: var(--bg);
+  background-image: radial-gradient(#2a2a4a 1px, transparent 1px);
+}
+
+:root.dark .flashcard .card-front,
+:root.dark .flashcard .card-back {
+  background-color: #2a2a4a !important;
+  color: var(--text);
+}
+
+:root.dark .card-face { color: var(--text); }
+:root.dark .word-reading,
+:root.dark .word-meaning { color: var(--text); }
+
+:root.dark .home-btn,
+:root.dark .nav-btn { background: #2a2a4a; color: var(--text); }
+
+:root.dark .srs-daily-log,
+:root.dark .map-node.unlocked,
+:root.dark .map-node.completed,
+:root.dark .log-stat-card,
+:root.dark .log-srs-stats,
+:root.dark .log-phase { background: #2a2a4a; }
+
+:root.dark .map-node.locked { background: #222240; }
+
+:root.dark .quiz-card-hiragana { background: #2a2a4a; }
+:root.dark .quiz-choice-btn { background: #2a2a4a; border-color: #444; color: var(--text); }
+:root.dark .quiz-choice-btn:hover { background: #383860; }
+
+:root.dark .lesson-complete-view { background: transparent; }
+:root.dark .speech-bubble { background: #2a2a4a; color: var(--text); }
+:root.dark .speech-bubble::after { border-top-color: #2a2a4a; }
+
+:root.dark .log-btn { border-color: var(--mint); color: var(--mint); }
+:root.dark .log-btn:hover { background: var(--mint); color: white; }
+
+:root.dark .srs-stat-row { border-bottom-color: #333355; }
+:root.dark .top-bar { background: #2a2a4a; }
+
+.theme-toggle-btn {
+  background: none;
+  border: 1.5px solid #ccc;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+:root.dark .theme-toggle-btn { border-color: #555; }
+

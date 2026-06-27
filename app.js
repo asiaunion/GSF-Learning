@@ -1,7 +1,8 @@
 import CURRICULUM from './data/curriculum.js';
 import { StorageAdapter } from './lib/storageAdapter.js';
 import { TTSService } from './lib/ttsService.js';
-import { checkStreak, findLesson } from './lib/gameLogic.js';
+import { checkStreak } from './lib/gameLogic.js';
+import { findLesson, getAllLessons } from './lib/curriculumHelper.js';
 import { renderHome } from './lib/views/homeView.js';
 import { renderLesson, navigateCard } from './lib/views/lessonView.js';
 import { startQuiz, startSrsQuiz } from './lib/views/quizView.js';
@@ -58,11 +59,11 @@ class FlashcardApp {
   }
 
   preloadLessonImages(lesson) {
-    lesson.cards.forEach(card => { new Image().src = card.image; });
+    lesson.cards.forEach(card => { if (card.image) new Image().src = card.image; });
     setTimeout(() => {
-      const allLessons = CURRICULUM.phases.flatMap(p => p.lessons);
+      const allLessons = getAllLessons();
       const idx = allLessons.findIndex(l => l.id === lesson.id);
-      allLessons[idx + 1]?.cards.forEach(card => { new Image().src = card.image; });
+      allLessons[idx + 1]?.cards.forEach(card => { if (card.image) new Image().src = card.image; });
     }, 1000);
   }
 
@@ -107,6 +108,10 @@ class FlashcardApp {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  if (localStorage.getItem('theme') === 'dark') {
+    document.documentElement.classList.add('dark');
+  }
+
   // iOS에서 첫 터치 시 오디오 컨텍스트 활성화
   document.addEventListener('click', function unlockAudio() {
     if ('speechSynthesis' in window) {
