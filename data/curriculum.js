@@ -4,7 +4,7 @@ import vocabulary from './phases/vocabulary.js';
 import kanji from './phases/kanji.js';
 
 const CURRICULUM = {
-  appTitle: "にほんご フラッシュカード",
+  appTitle: "ヨセフの日本語",
   stages: [
     {
       id: 1,
