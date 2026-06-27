@@ -372,17 +372,19 @@ body {
   text-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
+.card-front .card-emoji-huge {
+  font-size: 100px;
+  line-height: 1;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  margin-bottom: 10px;
+}
+
 .card-front .card-char-huge {
   font-size: 140px;
   font-weight: 900;
   line-height: 1;
   color: white;
   text-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
 }
 
 .card-back {
