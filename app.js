@@ -399,7 +399,8 @@ class FlashcardApp {
           <div class="flashcard ${this.isFlipped ? 'flipped' : ''} ${!this.hasFlippedOnce ? 'bounce' : ''}" id="flashcard">
             <div class="card-face card-front" style="background-color: ${bgColor};">
               ${(this.currentPhase.type === 'vocabulary' || this.currentPhase.type === 'kanji') ? `
-                <div class="card-char-huge">${card.character}</div>
+                ${card.emoji ? `<div class="card-emoji-huge">${card.emoji}</div>` : ''}
+                <div class="card-char-huge" ${card.emoji ? 'style="font-size: 3rem; margin-top: 10px;"' : ''}>${card.character}</div>
               ` : `
                 <img src="${card.image}" class="card-image" alt="illustration" loading="lazy"
                   onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlZWVlZWUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPijjgIxf44CMKTwvdGV4dD48L3N2Zz4='">
@@ -747,6 +748,16 @@ class FlashcardApp {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // 모바일/iOS 기기에서 음성 재생을 허용하기 위해, 첫 터치 시점에 빈 음성을 재생하여 오디오 컨텍스트를 활성화합니다.
+  document.addEventListener('click', function unlockAudio() {
+    if ('speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+    }
+    document.removeEventListener('click', unlockAudio);
+  }, { once: true });
+
   window.app = new FlashcardApp();
   await window.app.init();
 });
