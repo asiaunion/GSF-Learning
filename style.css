@@ -1255,3 +1255,53 @@ body {
   cursor: pointer;
 }
 
+/* ─── 섞기 버튼 ─────────────────────────────────── */
+.shuffle-btn {
+  background: none;
+  border: 1.5px solid #ccc;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+}
+.shuffle-btn.active {
+  opacity: 1;
+  background: var(--mint);
+  border-color: var(--mint);
+}
+
+/* ─── 예문 카드 ─────────────────────────────────── */
+.card-example {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 12px;
+  text-align: center;
+}
+.example-jp {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.example-ko {
+  font-size: 0.82rem;
+  color: #888;
+  font-weight: 600;
+}
+:root.dark .card-example { background: rgba(255,255,255,0.08); }
+:root.dark .example-ko { color: #aaa; }
+
+/* ─── 틀린 카드 재시도 버튼 ──────────────────────── */
+.wrong-retry-btn {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+}
+.wrong-retry-btn:hover { filter: brightness(1.1); }
+

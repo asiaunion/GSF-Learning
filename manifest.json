@@ -1,0 +1,24 @@
+{
+  "name": "ヨセフの日本語",
+  "short_name": "ヨセフ語",
+  "description": "요셉의 일본어 학습 앱 — 히라가나부터 성경 단어까지",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F7F6",
+  "theme_color": "#2EC4B6",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/images/joseph_anime.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/joseph_anime.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}
