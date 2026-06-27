@@ -6,17 +6,6 @@ class FlashcardApp {
   constructor() {
     this.appEl = document.getElementById('app');
     
-    this.mapProgress = StorageAdapter.getMapProgress();
-    this.srsStats = StorageAdapter.getSrsStats();
-    this.profile = StorageAdapter.getProfile();
-    this.dailyLogs = StorageAdapter.getDailyLogs();
-    this.isSrsMode = false;
-    
-    this.currentLesson = null;
-    this.currentCardIndex = 0;
-    this.isFlipped = false;
-    this.hasFlippedOnce = localStorage.getItem('hasFlippedOnce') === 'true';
-    
     // P1: 퀴즈 모드 상태
     this.quizMode = false;
     this.quizChoices = [];
@@ -24,6 +13,32 @@ class FlashcardApp {
     
     this.touchStartX = 0;
     this.touchEndX = 0;
+  }
+
+  async init() {
+    await StorageAdapter.init();
+
+    this.mapProgress = StorageAdapter.getMapProgress();
+    this.srsStats = StorageAdapter.getSrsStats();
+    this.profile = StorageAdapter.getProfile();
+    this.dailyLogs = StorageAdapter.getDailyLogs();
+    this.isSrsMode = false;
+    this.currentMapStage = 1; // Default to Stage 1
+    
+    // Auto-select the stage where the unlocked lesson is located
+    const allStages = CURRICULUM.stages || [];
+    for (const stage of allStages) {
+      for (const phase of stage.phases) {
+        if (phase.lessons.some(l => l.id === this.mapProgress.unlockedLessonId)) {
+          this.currentMapStage = stage.id;
+        }
+      }
+    }
+    
+    this.currentLesson = null;
+    this.currentCardIndex = 0;
+    this.isFlipped = false;
+    this.hasFlippedOnce = localStorage.getItem('hasFlippedOnce') === 'true';
     
     this.voices = [];
     const loadVoices = () => {
@@ -236,15 +251,41 @@ class FlashcardApp {
             ${hasDueCards ? `🎯 오늘의 복습 미션 (${dueCardsIds.length}개)` : (stampEarned ? '✨ 오늘 미션 완료! ✨' : '🎯 오늘의 복습 미션 시작')}
           </button>
         </div>
-
-        <div class="map-container">
-          <div class="map-path"></div>
     `;
-    
+
     const allLessons = CURRICULUM.phases.flatMap(p => p.lessons);
-    const reversedLessons = [...allLessons].reverse();
     
-    reversedLessons.forEach(lesson => {
+    // [기존 유저 대응] 콘텐츠 확장 시, 마지막 레슨을 깬 유저의 다음 레슨(101 등)이 열리지 않는 버그 수정
+    let highestCompletedIdx = -1;
+    allLessons.forEach((l, idx) => {
+      if (this.mapProgress.completedLessons.includes(l.id)) {
+        highestCompletedIdx = Math.max(highestCompletedIdx, idx);
+      }
+    });
+    if (highestCompletedIdx >= 0 && highestCompletedIdx + 1 < allLessons.length) {
+      const nextId = allLessons[highestCompletedIdx + 1].id;
+      if (this.mapProgress.unlockedLessonId < nextId) {
+        this.mapProgress.unlockedLessonId = nextId;
+        StorageAdapter.saveMapProgress(this.mapProgress);
+      }
+    }
+
+    const stages = CURRICULUM.stages || [];
+    const currentStageObj = stages.find(s => s.id === this.currentMapStage) || stages[0];
+    const stageLessons = currentStageObj ? currentStageObj.phases.flatMap(p => p.lessons) : allLessons;
+
+    html += `
+        <div class="stage-selector">
+          <button class="stage-btn" id="stage-prev-btn" ${this.currentMapStage <= 1 ? 'disabled' : ''}>◀</button>
+          <div class="stage-title">${currentStageObj ? currentStageObj.title : '맵'}</div>
+          <button class="stage-btn" id="stage-next-btn" ${this.currentMapStage >= stages.length ? 'disabled' : ''}>▶</button>
+        </div>
+        <div class="map-container">
+    `;
+
+    const nodesPerRow = 3;
+    for (let i = 0; i < stageLessons.length; i++) {
+      const lesson = stageLessons[i];
       const isCompleted = this.mapProgress.completedLessons.includes(lesson.id);
       const isUnlocked = this.mapProgress.unlockedLessonId >= lesson.id || isCompleted;
       
@@ -252,13 +293,35 @@ class FlashcardApp {
       if (isCompleted) nodeClass = 'map-node completed';
       else if (isUnlocked) nodeClass = 'map-node unlocked';
       
+      const rowIndex = Math.floor(i / nodesPerRow);
+      const colIndex = i % nodesPerRow;
+      const gridRow = rowIndex * 2 + 1;
+      const isLeftToRight = (rowIndex % 2 === 0);
+      const gridCol = isLeftToRight ? (colIndex * 2 + 1) : (5 - (colIndex * 2));
+      
       html += `
-        <a href="${isUnlocked ? '#lesson/' + lesson.id : '#home'}" class="${nodeClass}" title="${lesson.row}">
-          ${isCompleted ? '✓' : lesson.id}
-          <div class="node-label">${lesson.row}</div>
+        <a href="${isUnlocked ? '#lesson/' + lesson.id : '#home'}" 
+           class="${nodeClass}" 
+           title="${lesson.row}"
+           style="grid-row: ${gridRow}; grid-column: ${gridCol};">
+          <span class="node-text">${lesson.row}</span>
+          ${isCompleted ? '<div class="completed-badge">✓</div>' : ''}
         </a>
       `;
-    });
+      
+      if (i < stageLessons.length - 1) {
+        const nextLesson = stageLessons[i + 1];
+        const isNextUnlocked = this.mapProgress.unlockedLessonId >= nextLesson.id || this.mapProgress.completedLessons.includes(nextLesson.id);
+        const lineClass = isNextUnlocked ? 'path-line active' : 'path-line';
+        
+        if (colIndex < nodesPerRow - 1) {
+          const lineGridCol = isLeftToRight ? gridCol + 1 : gridCol - 1;
+          html += `<div class="${lineClass} horizontal" style="grid-row: ${gridRow}; grid-column: ${lineGridCol};"></div>`;
+        } else {
+          html += `<div class="${lineClass} vertical" style="grid-row: ${gridRow + 1}; grid-column: ${gridCol};"></div>`;
+        }
+      }
+    }
     
     html += `
         </div>
@@ -270,6 +333,23 @@ class FlashcardApp {
     document.getElementById('daily-quest-btn').addEventListener('click', () => {
       if (hasDueCards || !stampEarned) {
         window.location.hash = '#quiz/srs';
+      } else {
+        this.startSrsSession();
+      }
+    });
+
+    const prevBtn = document.getElementById('stage-prev-btn');
+    const nextBtn = document.getElementById('stage-next-btn');
+    if (prevBtn) prevBtn.addEventListener('click', () => {
+      if (this.currentMapStage > 1) {
+        this.currentMapStage--;
+        this.renderHome();
+      }
+    });
+    if (nextBtn) nextBtn.addEventListener('click', () => {
+      if (this.currentMapStage < stages.length) {
+        this.currentMapStage++;
+        this.renderHome();
       }
     });
   }
@@ -318,9 +398,13 @@ class FlashcardApp {
         <div class="flashcard-container" id="flashcard-container">
           <div class="flashcard ${this.isFlipped ? 'flipped' : ''} ${!this.hasFlippedOnce ? 'bounce' : ''}" id="flashcard">
             <div class="card-face card-front" style="background-color: ${bgColor};">
-              <img src="${card.image}" class="card-image" alt="illustration" loading="lazy"
-                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlZWVlZWUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPijjgIxf44CMKTwvdGV4dD48L3N2Zz4='">
-              <div class="card-char">${card.character}</div>
+              ${(this.currentPhase.type === 'vocabulary' || this.currentPhase.type === 'kanji') ? `
+                <div class="card-char-huge">${card.character}</div>
+              ` : `
+                <img src="${card.image}" class="card-image" alt="illustration" loading="lazy"
+                  onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiB2aWV3Qm94PSIwIDAgMjAwIDIwMCI+PHJlY3Qgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyMDAiIGZpbGw9IiNlZWVlZWUiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSI1MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPijjgIxf44CMKTwvdGV4dD48L3N2Zz4='">
+                <div class="card-char">${card.character}</div>
+              `}
             </div>
             <div class="card-face card-back">
               <div class="word-reading">${wordHtml}</div>
@@ -662,6 +746,7 @@ class FlashcardApp {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   window.app = new FlashcardApp();
+  await window.app.init();
 });
