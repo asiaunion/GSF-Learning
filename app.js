@@ -2,6 +2,7 @@ import CURRICULUM from './data/curriculum.js';
 import { StorageAdapter } from './lib/storageAdapter.js';
 import { TTSService } from './lib/ttsService.js';
 import { checkStreak } from './lib/gameLogic.js';
+import { NotificationService } from './lib/notificationService.js';
 import { findLesson, getAllLessons } from './lib/curriculumHelper.js';
 import { renderHome } from './lib/views/homeView.js';
 import { renderLesson, navigateCard } from './lib/views/lessonView.js';
@@ -45,6 +46,7 @@ class FlashcardApp {
     TTSService.init();
     this.preloadMascot();
     checkStreak(this);
+    NotificationService.checkAndNotify(this.srsStats);
 
     window.addEventListener('hashchange', () => this.handleRoute());
     window.addEventListener('keydown', (e) => this.handleKeydown(e));
