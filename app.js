@@ -1,20 +1,16 @@
+import CURRICULUM from './data/curriculum.js';
+import { StorageAdapter } from './lib/storageAdapter.js';
+import { SRSEngine } from './lib/srsEngine.js';
+
 class FlashcardApp {
   constructor() {
     this.appEl = document.getElementById('app');
     
-    try {
-      this.completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
-      if (!Array.isArray(this.completedLessons)) this.completedLessons = [];
-    } catch (e) {
-      this.completedLessons = [];
-    }
-    
-    // P1: 아코디언 상태 (기본: 히라가나 열림, 가타카나 닫힘)
-    try {
-      this.accordionState = JSON.parse(localStorage.getItem('accordionState') || '{"hiragana":true,"katakana":false}');
-    } catch (e) {
-      this.accordionState = { hiragana: true, katakana: false };
-    }
+    this.mapProgress = StorageAdapter.getMapProgress();
+    this.srsStats = StorageAdapter.getSrsStats();
+    this.profile = StorageAdapter.getProfile();
+    this.dailyLogs = StorageAdapter.getDailyLogs();
+    this.isSrsMode = false;
     
     this.currentLesson = null;
     this.currentCardIndex = 0;
@@ -44,6 +40,7 @@ class FlashcardApp {
     window.addEventListener('keydown', (e) => this.handleKeydown(e));
     
     this.preloadMascot();
+    this.checkStreak();
     this.handleRoute();
   }
   
@@ -107,6 +104,26 @@ class FlashcardApp {
     setTimeout(() => { window.speechSynthesis.speak(utterance); }, 50);
   }
   
+  checkStreak() {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const lastActive = this.profile.lastActiveDate ? new Date(this.profile.lastActiveDate) : null;
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (lastActive) {
+      const diffTime = Math.abs(today - lastActive);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 1 && !this.dailyLogs[todayStr]?.stampEarned) {
+        this.profile.currentStreak = 0;
+      }
+    }
+    
+    if (this.dailyLogs[todayStr]?.stampEarned) {
+      this.profile.lastActiveDate = todayStr;
+    }
+    StorageAdapter.saveProfile(this.profile);
+  }
+
   handleRoute() {
     const hash = window.location.hash || '#home';
     if (hash === '#home') {
@@ -117,16 +134,62 @@ class FlashcardApp {
       this.quizMode = false;
       this.startLesson(lessonId);
     } else if (hash.startsWith('#quiz/')) {
-      const quizTarget = hash.split('/')[1]; // 'hiragana' or a number
-      this.startQuiz(quizTarget);
+      const quizTarget = hash.split('/')[1];
+      if (quizTarget === 'srs') {
+        this.startSrsQuiz();
+      } else {
+        this.startQuiz(quizTarget);
+      }
     }
+  }
+
+  startSrsQuiz() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dueCardsIds = SRSEngine.getDueCards(this.srsStats, todayStr);
+    const allCards = CURRICULUM.phases.flatMap(p => p.lessons.flatMap(l => l.cards));
+    
+    if (dueCardsIds.length > 0) {
+      this.quizDeck = allCards.filter(c => dueCardsIds.includes(this.getCardId(c)));
+    } else {
+      const completedCards = allCards.filter(c => {
+         const lesson = CURRICULUM.phases.flatMap(p=>p.lessons).find(l => l.cards.includes(c));
+         return lesson && this.mapProgress.completedLessons.includes(lesson.id);
+      });
+      this.quizDeck = completedCards.sort(() => Math.random() - 0.5).slice(0, 5);
+      if (this.quizDeck.length === 0) {
+        this.quizDeck = allCards.slice(0, 5);
+      }
+    }
+    
+    this.quizMode = true;
+    this.isSrsMode = true;
+    this.currentCardIndex = 0;
+    this.quizScore = 0;
+    this.quizDeck = this.quizDeck.sort(() => Math.random() - 0.5);
+    this.renderQuiz();
   }
   
   markLessonCompleted(lessonId) {
-    if (!this.completedLessons.includes(lessonId)) {
-      this.completedLessons.push(lessonId);
-      localStorage.setItem('completedLessons', JSON.stringify(this.completedLessons));
+    if (!this.mapProgress.completedLessons.includes(lessonId)) {
+      this.mapProgress.completedLessons.push(lessonId);
+      
+      const allLessons = CURRICULUM.phases.flatMap(p => p.lessons);
+      const idx = allLessons.findIndex(l => l.id === lessonId);
+      if (idx !== -1 && idx + 1 < allLessons.length) {
+        const nextId = allLessons[idx + 1].id;
+        if (this.mapProgress.unlockedLessonId < nextId) {
+          this.mapProgress.unlockedLessonId = nextId;
+        }
+      }
+      StorageAdapter.saveMapProgress(this.mapProgress);
+      
+      this.profile.stars += 10;
+      StorageAdapter.saveProfile(this.profile);
     }
+  }
+
+  getCardId(card) {
+    return `${card.character}_${card.wordReading}`;
   }
   
   findLesson(id) {
@@ -140,14 +203,20 @@ class FlashcardApp {
   // ─── P1: 진도 바 계산 ───────────────────────────────────
   getTotalProgress() {
     const total = CURRICULUM.phases.reduce((sum, p) => sum + p.lessons.length, 0);
-    const done = this.completedLessons.length;
+    const done = this.mapProgress.completedLessons.length;
     return { total, done, pct: total > 0 ? Math.round((done / total) * 100) : 0 };
   }
 
   // ─── P1: 홈 화면 렌더 (아코디언 + 진도 바) ─────────────
   renderHome() {
     this.currentLesson = null;
-    const { total, done, pct } = this.getTotalProgress();
+    this.isSrsMode = false;
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dueCardsIds = SRSEngine.getDueCards(this.srsStats, todayStr);
+    const hasDueCards = dueCardsIds.length > 0;
+    const logToday = this.dailyLogs[todayStr] || {};
+    const stampEarned = logToday.stampEarned || false;
 
     let html = `
       <div class="home-view">
@@ -157,65 +226,54 @@ class FlashcardApp {
           <h1 class="title">${CURRICULUM.appTitle}</h1>
         </div>
 
-        <div class="progress-section">
-          <div class="progress-label">
-            <span>📚 전체 진도</span>
-            <span class="progress-count">${done} / ${total} 완료 (${pct}%)</span>
-          </div>
-          <div class="progress-bar-track">
-            <div class="progress-bar-fill" style="width: ${pct}%"></div>
-          </div>
-          ${pct === 100 ? '<div class="progress-complete">🎉 모든 레슨 완료! すごい！</div>' : ''}
+        <div class="srs-daily-log">
+          <span class="srs-streak">🔥 ${this.profile.currentStreak || 0}일 연속</span>
+          <span class="srs-stars">⭐ ${this.profile.stars || 0}</span>
         </div>
+
+        <div class="daily-quest-container">
+          <button class="daily-quest-btn" id="daily-quest-btn" ${!hasDueCards && stampEarned ? 'disabled' : ''}>
+            ${hasDueCards ? `🎯 오늘의 복습 미션 (${dueCardsIds.length}개)` : (stampEarned ? '✨ 오늘 미션 완료! ✨' : '🎯 오늘의 복습 미션 시작')}
+          </button>
+        </div>
+
+        <div class="map-container">
+          <div class="map-path"></div>
     `;
     
-    CURRICULUM.phases.forEach(phase => {
-      const phaseTotal = phase.lessons.length;
-      const phaseDone = phase.lessons.filter(l => this.completedLessons.includes(l.id)).length;
-      const isOpen = this.accordionState[phase.id] !== false;
-
+    const allLessons = CURRICULUM.phases.flatMap(p => p.lessons);
+    const reversedLessons = [...allLessons].reverse();
+    
+    reversedLessons.forEach(lesson => {
+      const isCompleted = this.mapProgress.completedLessons.includes(lesson.id);
+      const isUnlocked = this.mapProgress.unlockedLessonId >= lesson.id || isCompleted;
+      
+      let nodeClass = 'map-node locked';
+      if (isCompleted) nodeClass = 'map-node completed';
+      else if (isUnlocked) nodeClass = 'map-node unlocked';
+      
       html += `
-        <div class="phase-section">
-          <button class="phase-toggle" data-phase="${phase.id}" aria-expanded="${isOpen}">
-            <span class="phase-title-text">${phase.title}</span>
-            <span class="phase-badge">${phaseDone}/${phaseTotal}</span>
-            <span class="phase-arrow">${isOpen ? '▲' : '▼'}</span>
-          </button>
-          <div class="lesson-grid ${isOpen ? 'open' : 'closed'}" id="grid-${phase.id}">
+        <a href="${isUnlocked ? '#lesson/' + lesson.id : '#home'}" class="${nodeClass}" title="${lesson.row}">
+          ${isCompleted ? '✓' : lesson.id}
+          <div class="node-label">${lesson.row}</div>
+        </a>
       `;
-      
-      phase.lessons.forEach(lesson => {
-        const isCompleted = this.completedLessons.includes(lesson.id);
-        let displayRow = lesson.row;
-        displayRow = displayRow.replace(/行.*/, '<span class="row-sub">行</span>');
-        
-        html += `
-            <a href="#lesson/${lesson.id}" class="lesson-card ${isCompleted ? 'completed' : ''}">
-              ${isCompleted ? '<div class="completed-check">✓</div>' : ''}
-              <div class="lesson-row">${displayRow}</div>
-            </a>
-        `;
-      });
-      
-      html += `</div></div>`;
     });
     
-    html += `</div>`;
+    html += `
+        </div>
+      </div>
+    `;
+    
     this.appEl.innerHTML = html;
-    this.attachHomeEvents();
-  }
 
-  attachHomeEvents() {
-    document.querySelectorAll('.phase-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const phaseId = btn.getAttribute('data-phase');
-        this.accordionState[phaseId] = !this.accordionState[phaseId];
-        localStorage.setItem('accordionState', JSON.stringify(this.accordionState));
-        this.renderHome();
-      });
+    document.getElementById('daily-quest-btn').addEventListener('click', () => {
+      if (hasDueCards || !stampEarned) {
+        window.location.hash = '#quiz/srs';
+      }
     });
   }
-  
+
   startLesson(lessonId) {
     const found = this.findLesson(lessonId);
     if (!found) { window.location.hash = '#home'; return; }
@@ -419,9 +477,9 @@ class FlashcardApp {
     this.currentLesson = found.lesson;
     this.currentPhase = found.phase;
     this.quizMode = true;
+    this.isSrsMode = false;
     this.currentCardIndex = 0;
     this.quizScore = 0;
-    // 완료한 레슨의 카드만 셸플로 퀴즈덱
     this.quizDeck = [...found.lesson.cards].sort(() => Math.random() - 0.5);
     this.renderQuiz();
   }
@@ -502,6 +560,13 @@ class FlashcardApp {
             }
           });
         }
+        
+        // SRS 자동 기록
+        const cardId = this.getCardId(card);
+        const currentStats = this.srsStats[cardId];
+        const newStats = SRSEngine.processReview(currentStats, isCorrect);
+        this.srsStats[cardId] = newStats;
+        StorageAdapter.saveSrsStats(this.srsStats);
 
         // 1.2초 후 다음 카드 or 결과
         setTimeout(() => {
@@ -518,6 +583,22 @@ class FlashcardApp {
 
   showQuizResult(totalCards) {
     const pct = Math.round((this.quizScore / totalCards) * 100);
+    
+    // 일일 스탬프 지급 (SRS 모드일 때만, 60점 이상이면)
+    if (this.isSrsMode && pct >= 60) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const logToday = this.dailyLogs[todayStr] || {};
+      if (!logToday.stampEarned) {
+        logToday.stampEarned = true;
+        this.dailyLogs[todayStr] = logToday;
+        StorageAdapter.saveDailyLog(todayStr, logToday);
+        
+        this.profile.currentStreak = (this.profile.currentStreak || 0) + 1;
+        this.profile.stars = (this.profile.stars || 0) + 20;
+        StorageAdapter.saveProfile(this.profile);
+      }
+    }
+
     let grade = '';
     if (pct === 100) grade = '🏆 만점! すごい！';
     else if (pct >= 80) grade = '🌟 잘했어요!';
