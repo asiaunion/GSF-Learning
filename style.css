@@ -1065,3 +1065,85 @@ body {
 .srs-streak { color: var(--highlight); }
 .srs-stars { color: #f1c40f; }
 
+.log-btn {
+  margin-left: auto;
+  background: none;
+  border: 1.5px solid var(--mint);
+  color: var(--mint);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.log-btn:hover { background: var(--mint); color: white; }
+
+/* ─── 학습 로그 뷰 ─────────────────────────────── */
+.log-view { padding: 0 0 40px; }
+
+.log-summary {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  justify-content: center;
+}
+.log-stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px 20px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+  flex: 1;
+  max-width: 120px;
+}
+.log-stat-num { font-size: 28px; font-weight: 900; color: var(--highlight); }
+.log-stat-label { font-size: 11px; color: #666; margin-top: 2px; }
+.log-stat-sub { font-size: 11px; color: #aaa; }
+
+.log-section { padding: 0 16px 20px; }
+.log-section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: #333; }
+
+.log-calendar {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+.cal-day {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.cal-day.stamped { background: #fff3cd; }
+.log-calendar-legend { font-size: 11px; color: #888; margin-top: 6px; }
+
+.log-srs-stats { background: white; border-radius: 16px; padding: 12px 16px; box-shadow: var(--card-shadow); }
+.srs-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.srs-stat-row:last-child { border-bottom: none; }
+.srs-stat-label { font-size: 13px; color: #555; }
+.srs-stat-val { font-size: 14px; font-weight: 700; }
+.srs-stat-val.accent { color: var(--highlight); }
+
+.log-lessons { display: flex; flex-direction: column; gap: 12px; }
+.log-phase { background: white; border-radius: 16px; padding: 12px 16px; box-shadow: var(--card-shadow); }
+.log-phase-title { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 8px; }
+.log-phase-lessons { display: flex; flex-wrap: wrap; gap: 6px; }
+.log-lesson-tag {
+  background: var(--mint);
+  color: white;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.log-empty { color: #aaa; font-size: 14px; text-align: center; padding: 20px 0; }
+

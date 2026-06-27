@@ -1,0 +1,7 @@
+{
+  "name": "gsf-learning",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
