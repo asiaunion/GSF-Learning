@@ -980,15 +980,53 @@ body {
   --text-2:      #94a3b8;
   --text-3:      #64748b;
   --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.3);
-  --accent-bg:   #1e1b4b;
-  --success-bg:  #064e3b;
+
+  /* 다크모드에서 accent/success는 더 밝게 — 어두운 배경 위 가독성 확보 */
+  --accent:        #818cf8;   /* indigo-400 */
+  --accent-light:  #c7d2fe;   /* indigo-200 */
+  --accent-bg:     rgba(99, 102, 241, 0.15);
+  --success:       #34d399;   /* emerald-400 */
+  --success-bg:    rgba(52, 211, 153, 0.12);
 }
 
+/* 카드 */
 :root.dark .card-back { background: #1e293b; }
 :root.dark .card-back .word-meaning { background: var(--surface-2); border-color: var(--border); color: var(--text-2); }
 :root.dark .speech-bubble::after { border-top-color: var(--surface); }
 :root.dark .log-srs-stats { background: var(--surface); }
 :root.dark .theme-toggle-btn { border-color: var(--border-2); }
+
+/* 맵 노드 — 다크모드 시인성 */
+:root.dark .map-node.unlocked {
+  border-color: #818cf8;
+  background: rgba(99, 102, 241, 0.18);
+}
+:root.dark .map-node.unlocked .node-text {
+  color: #a5b4fc;   /* indigo-300 */
+}
+:root.dark .map-node.completed {
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+:root.dark .map-node.completed .node-text {
+  color: #6ee7b7;   /* emerald-300 */
+}
+:root.dark .map-node:not(.unlocked):not(.completed) .node-text {
+  color: var(--text-2);   /* slate-400 → slate-500 보다 밝게 */
+}
+:root.dark .completed-badge {
+  background: #34d399;
+  color: #052e16;
+}
+:root.dark .path-line.active { background: #34d399; }
+
+/* 퀴즈 */
+:root.dark .quiz-card-hiragana { background: var(--surface); border-color: var(--border); }
+:root.dark .quiz-choice-btn { background: var(--surface); border-color: var(--border); color: var(--text); }
+:root.dark .quiz-choice-btn:hover:not(:disabled) { background: rgba(99,102,241,0.15); border-color: #818cf8; color: #a5b4fc; }
+
+/* 로그 */
+:root.dark .log-lesson-tag { background: rgba(99,102,241,0.2); color: #a5b4fc; border-color: #4f46e5; }
 
 /* ─── 알림 배너 ─────────────────────────────────── */
 .notif-banner {
