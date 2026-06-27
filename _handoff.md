@@ -11,3 +11,10 @@
 - 배포 URL: https://gsf-learning.vercel.app/ (또는 Vercel 설정 도메인)
 - Claude 부재 여부: 아니오
 - 특이사항: 없음
+
+## [2026-06-27 20:38] AG 배포 완료
+- 작업 내용: Phase 3 단어 데이터 대규모 추가 (10개 레슨) 및 이모지 기반 카드 UI 추가, iOS TTS(Web Speech API) 첫 터치 자동 해제 로직 구현
+- 커밋 해시: 0a2eaa0 (PR #5)
+- 배포 URL: Vercel 자동 배포 대기 (main 병합 완료)
+- Claude 부재 여부: 아니오
+- 특이사항: `app.js`에서 터치 시 빈 음성을 재생해 오디오 컨텍스트를 푸는 `unlockAudio` 트릭 도입
