@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const appJsPath = '/Users/gsf/GSF/nihongo-flashcard/app.js';
+const appJsPath = '/Users/gsf/Workspace/nihongo-flashcard/app.js';
 let content = fs.readFileSync(appJsPath, 'utf-8');
 
 // The new curriculum JSON
